@@ -1,6 +1,6 @@
-package com.namy.udac.backend.model;
+package com.namy.udac.backend.model.userModel;
 
-public class User {
+public class Users {
     private String idUser;
     private String role;
     private String fullname;
@@ -9,9 +9,19 @@ public class User {
     private String email;
     private String phone;
 
-    public User() {}
+    public Users() {}
 
-    public User(String idUser, String role, String fullname, String username, String password, String email, String phone) {
+    public Users(Users user) {
+        this.idUser = user.idUser;
+        this.role = user.role;
+        this.fullname = user.fullname;
+        this.username = user.username;
+        this.password = user.password;
+        this.email = user.email;
+        this.phone = user.phone;
+    }
+    
+    public Users(String idUser, String role, String fullname, String username, String password, String email, String phone) {
         this.idUser = idUser;
         this.role = role;
         this.fullname = fullname;
@@ -79,7 +89,7 @@ public class User {
 
     @Override
     public String toString() {
-        return "User{" +
+        return "Users{" +
                 "idUser='" + idUser + '\'' +
                 ", role='" + role + '\'' +
                 ", fullname='" + fullname + '\'' +

@@ -7,8 +7,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
-import com.namy.udac.backend.repository.UserRepo_JDBC;
-import com.namy.udac.backend.repository.UserRepository;
+import com.namy.udac.backend.repository.userRepo.UserRepo_JDBC;
+import com.namy.udac.backend.repository.userRepo.UserRepository;
 
 @Configuration
 public class DatabaseConfig {

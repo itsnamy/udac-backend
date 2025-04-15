@@ -1,69 +1,97 @@
 package com.namy.udac.backend.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
     
+    @Autowired
+    private JWTFilter jwtFilter; 
+
+    @Autowired
+    private UserDetailsService userDetailsService;
+    
     @Bean 
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
+        return http
+            .cors(Customizer.withDefaults())
             .csrf(customizer -> customizer.disable())
             .authorizeHttpRequests(auth -> auth
-                                .requestMatchers("/auth/login").permitAll()  // Allow public access to /auth/login
-                                .requestMatchers("/createUser").permitAll()  // Allow public access to /createUser
-                                .requestMatchers("/getAllUser").permitAll()  
-                                //.requestMatchers("/getAllUser").hasRole("ADMIN") // Allow only ADMIN to access /
+                                .requestMatchers("/auth/**", "/public/**").permitAll()  // Allow public access to /auth/** endpoints
+                                .requestMatchers("/admin/**").hasAuthority("ADMIN") 
+                                .requestMatchers("/student/**").hasAuthority("STUDENT")
+                                .requestMatchers("/common/**").hasAnyAuthority("ADMIN", "STUDENT")
                                 .anyRequest().authenticated())
             .httpBasic(Customizer.withDefaults())
-            .formLogin(formLogin -> formLogin.disable())
-            //.oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
-            //.httpBasic(Customizer.withDefaults())
-            //.sessionManagement(session -> session
-                                //.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            ;
-        return http.build();
-    }
-
-    @Bean
-    public UserDetailsService userDetailsService() {
-        
-        UserDetails user1 = User
-            .withUsername("student1")
-            .password(passwordEncoder().encode("student123")) // Use password encoder
-            .roles("STUDENT")
+            .formLogin(Customizer.withDefaults())
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
             .build();
+    }
 
-        UserDetails user2 = User
-            .withUsername("admin1")
-            .password(passwordEncoder().encode("admin123"))
-            .roles("ADMIN")
-            .build();
+// uncomment to use in-memory authentication for testing purposes
+//    @Bean
+//    public UserDetailsService userDetailsService() {
+//
+//        UserDetails user1 = User
+//                .withDefaultPasswordEncoder()
+//                .username("kiran")
+//                .password("k@123")
+//                .roles("USER")
+//                .build();
+//
+//        UserDetails user2 = User
+//                .withDefaultPasswordEncoder()
+//                .username("harsh")
+//                .password("h@123")
+//                .roles("ADMIN")
+//                .build();
+//        return new InMemoryUserDetailsManager(user1, user2);
+//    }
 
-        return new InMemoryUserDetailsManager(user1, user2);
+// Provide authentication to the user during authentication process
+    @Bean
+    public AuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(); // Creates a DAO-based auth provider (DAO = Data Access Object) and use userdetailsService to load user details from db
+        provider.setPasswordEncoder(new BCryptPasswordEncoder(4)); // Set the password encoder to use BCrypt with a strength of 4 (4 rounds of hashing)
+        provider.setUserDetailsService(userDetailsService); // Tells the provider to use your custom implementation of UserDetailsService to load user data.
+
+        return provider;
+    }
+// Manage authentication to authenticate users during login (needed when have more than 1 auhtenctication flow. in this case basic auth and bearer tokern auth)
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager(); // Returns the authentication manager from the provided configuration
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(); // Secure password encoding
-    }
-    
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
-        return authConfig.getAuthenticationManager();
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.addAllowedOrigin("http://localhost:3000"); // Frontend origin
+        config.addAllowedMethod("*"); // Allow all HTTP methods
+        config.addAllowedHeader("*"); // Allow all headers
+        config.setAllowCredentials(true); // Allow cookies and Authorization headers
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config); // Apply to all routes
+        return source;
     }
 }

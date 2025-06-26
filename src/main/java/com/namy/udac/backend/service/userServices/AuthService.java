@@ -1,6 +1,9 @@
 package com.namy.udac.backend.service.userServices;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+//import org.springframework.mail.SimpleMailMessage;
+//import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -13,6 +16,12 @@ import com.namy.udac.backend.repository.userRepo.UserRepository;
 @Service
 public class AuthService {
     
+    //@Autowired
+    //private JavaMailSender mailSender;
+
+    @Value("${spring.mail.username}")
+    private String fromEmail;
+
     @Autowired
     private JWTService jwtService;
 
@@ -63,10 +72,21 @@ public class AuthService {
         String token = jwtService.generateResetPasswordToken(username, 15 * 60 * 1000);
         sendResetPasswordEmail(token, userEmail);
         return "Password reset link: http://localhost:8080/auth/reset-password?token=" + token;
+    // return "Password reset link sent to " + userEmail;
     }
 
     public String sendResetPasswordEmail(String token, String email){
-        // TODO: Implement the logic to send the email with the reset link
+        /*String resetLink = "http://localhost:3000/reset-password?token=" + token;
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(fromEmail);
+        message.setTo(email);
+        message.setSubject("Password Reset Request");
+        message.setText("Click the following link to reset your password: " + resetLink 
+                        + "\n\nThis link will expire in 15 minutes.");
+
+        mailSender.send(message);*/
+
         return "Password reset link sent to " + email;
     }
     public String resetPassword(String token, String newPassword) {

@@ -35,7 +35,8 @@ public class SecurityConfig {
             .cors(Customizer.withDefaults())
             .csrf(customizer -> customizer.disable())
             .authorizeHttpRequests(auth -> auth
-                                .requestMatchers("/auth/**", "/public/**").permitAll()  // Allow public access to /auth/** endpoints
+                                .requestMatchers("/auth/**", "/public/**").permitAll()  // Allow public access to /auth/** endpoints  "/lesson/**"
+                                .requestMatchers("/material/video/stream/**").permitAll()
                                 .requestMatchers("/admin/**").hasAuthority("ADMIN") 
                                 .requestMatchers("/student/**").hasAuthority("STUDENT")
                                 .requestMatchers("/common/**").hasAnyAuthority("ADMIN", "STUDENT")
@@ -47,27 +48,6 @@ public class SecurityConfig {
             .build();
     }
 
-// uncomment to use in-memory authentication for testing purposes
-//    @Bean
-//    public UserDetailsService userDetailsService() {
-//
-//        UserDetails user1 = User
-//                .withDefaultPasswordEncoder()
-//                .username("kiran")
-//                .password("k@123")
-//                .roles("USER")
-//                .build();
-//
-//        UserDetails user2 = User
-//                .withDefaultPasswordEncoder()
-//                .username("harsh")
-//                .password("h@123")
-//                .roles("ADMIN")
-//                .build();
-//        return new InMemoryUserDetailsManager(user1, user2);
-//    }
-
-// Provide authentication to the user during authentication process
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider(); // Creates a DAO-based auth provider (DAO = Data Access Object) and use userdetailsService to load user details from db

@@ -65,7 +65,8 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.addAllowedOrigin("http://localhost:3000"); // Frontend origin
+        config.addAllowedOriginPattern("https://udac-frontend.onrender.com");
+        config.addAllowedOriginPattern("http://localhost:3000"); // Frontend origin
         config.addAllowedMethod("*"); // Allow all HTTP methods
         config.addAllowedHeader("*"); // Allow all headers
         config.setAllowCredentials(true); // Allow cookies and Authorization headers
